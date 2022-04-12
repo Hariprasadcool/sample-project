@@ -1,0 +1,123 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+public class Sample {
+
+public static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
+		
+		BufferedReader bufferReader = new BufferedReader(new InputStreamReader(System.in));
+		
+		//String cityName = bufferReader.readLine();
+		
+		//int estimateCost = Integer.parseInt(bufferReader.readLine().trim());
+		
+		int result = getVoteCount();
+		
+		int count = getVoteCountUsingString();
+		
+		System.out.println(String.valueOf(result));
+		
+		System.out.println(String.valueOf(count));
+		
+		bufferReader.close();
+		
+		
+	}
+	
+	public static int getVoteCount() throws IOException, InterruptedException, URISyntaxException {
+		
+		int votes=0;
+		
+		String response;
+				
+//		HttpClient client=HttpClient.newHttpClient();
+//		HttpRequest request=HttpRequest.newBuilder().uri(new URI("https://jsonmock.hackerrank.com/api/food_outlets?city=Seattle&estimated_cost=160")).GET().build();
+//		HttpResponse<String> resp=client.send(request,BodyHandlers.ofString());
+//		System.out.println(resp.body());
+		
+		URL obj = new URL("https://jsonmock.hackerrank.com/api/food_outlets?city=Seattle&estimated_cost=160");
+		
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		
+		con.setRequestMethod("GET");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		
+		while ((response = in.readLine()) != null) {
+		
+		JsonObject jsonObject = new Gson().fromJson(response, JsonObject.class);
+		
+		JsonArray data = jsonObject.getAsJsonArray("data");
+		
+		for(int i=0; i<data.size(); i++) {
+			
+			votes = votes + data.get(i).getAsJsonObject().get("user_rating").getAsJsonObject().get("votes").getAsInt();
+		}
+		
+		}
+		in.close();
+		return votes;
+		
+	}
+	
+public static int getVoteCountUsingString() throws IOException, InterruptedException, URISyntaxException {
+		
+		int votes=0;
+		
+		String response;
+				
+//		HttpClient client=HttpClient.newHttpClient();
+//		HttpRequest request=HttpRequest.newBuilder().uri(new URI("https://jsonmock.hackerrank.com/api/food_outlets?city=Seattle&estimated_cost=160")).GET().build();
+//		HttpResponse<String> response=client.send(request,BodyHandlers.ofString());
+//		System.out.println(response.body());
+		
+		URL obj = new URL("https://jsonmock.hackerrank.com/api/food_outlets?city=seattle&estimated_cost=160");
+		
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+		
+		con.setRequestMethod("GET");
+		
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		
+		while ((response = in.readLine()) != null) {
+		
+		List<String[]> data = Stream.of(response.replace("}", "").split(","))
+	            .map(s -> s.split(":"))
+	            .collect(Collectors.toList());
+		
+		if(data.get(4)[1].equals("[]"))
+			return votes=-1;
+		
+		
+		for(String[] s: data) {
+			
+			if(s[0].contains("votes")){
+				votes = votes + Integer.parseInt(s[1]);
+			}
+		}
+		
+		}
+		
+		in.close();
+		
+		return votes;
+		
+	}
+}
